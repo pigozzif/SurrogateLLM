@@ -41,3 +41,5 @@ def plot_vars(data, vs):
 if __name__ == "__main__":
     data = read_files("results")
     plot_vars(data, ["iter_best_fitness", "iter_total_time"])
+    plt.savefig("results.png")
+    plt.clf()

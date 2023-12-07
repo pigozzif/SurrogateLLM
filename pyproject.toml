@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "expensiveoptimbenchmark"
+version = "0.1.0"
+description = "A benchmark for expensive optimization problems."
+authors = ["Arthur <arthur.guijt12@gmail.com>", "Laurens <>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+wheel = "^0.34.2"
+numpy = "^1.18.4"
+hyperopt = "^0.2.4"
+smac = {version="^0.12.2", optional=true}
+pyGPGO = "^0.4.0.dev1"
+scikit-learn = "^0.23.1"
+scipy = "^1.4.1"
+pymc3 = "^3.8"
+numba = "^0.49.1"
+tsplib95 = "^0.7.1"
+bayesian-optimization = "^1.2.0"
+gpy = "^1.9.9"
+pandas = "^1.0.4"
+julia = {version="^0.5.4", optional=true}
+floris = {version="^2.1.1"}
+tqdm = "^4.47.0"
+argparse = "^1.4.0"
+xgboost = "^1.1.1"
+pynisher = "^0.5.0"
+cma = "^3.0.3"
+
+[tool.poetry.dev-dependencies]
+ipython = "^7.15.0"
+
+[tool.poetry.extras]
+smac = ["smac"]
+julia = ["julia"]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
