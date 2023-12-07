@@ -44,7 +44,7 @@ def parse_numerical_ranges(ranges):
 # Specialized argument processing for problems
 # TSP
 def construct_tsp(params):
-    from problems.TSP import TSP, load_tsplib, load_explicit_tsp
+    from EXPObench.expensiveoptimbenchmark.problems.TSP import load_tsplib, load_explicit_tsp
     iter_ns = parse_numerical_ranges(params['--iter'])
     noise_seeds = parse_numerical_ranges(params['--noise-seed']) if params['--noise-seed'] != "random" else [None]
     if '--tsplib-file' in params:
@@ -59,7 +59,7 @@ def construct_tsp(params):
 
 # Convex
 def construct_convex(params):
-    from problems.convex import Convex
+    from EXPObench.expensiveoptimbenchmark.problems.convex import Convex
     ds = parse_numerical_ranges(params['-d'])
     seeds = parse_numerical_ranges(params['--seed'])
     return [Convex(d, seed) for d, seed in product(ds, seeds)]
@@ -67,8 +67,8 @@ def construct_convex(params):
 
 # IntRosenbrock
 def construct_rosen_int(params):
-    from problems.rosenbrock_int import RosenbrockInt
-    from problems.rosenbrock_binarized import RosenbrockBinarized
+    from EXPObench.expensiveoptimbenchmark.problems.rosenbrock_int import RosenbrockInt
+    from EXPObench.expensiveoptimbenchmark.problems.rosenbrock_binarized import RosenbrockBinarized
     ds = parse_numerical_ranges(params['-d'])
     logscale = params['--logscale'] in ['true', 't', 'yes', 'y']
     binarize = params['--binarize'] in ['true', 't', 'yes', 'y']
@@ -80,7 +80,7 @@ def construct_rosen_int(params):
 
 # Rosenbrock (configurable)
 def construct_rosenbrock(params):
-    from problems.rosenbrock import Rosenbrock
+    from EXPObench.expensiveoptimbenchmark.problems.rosenbrock import Rosenbrock
     assert params['--n-int'] != '0' or params['--n-cont'] != '0', "Rosenbrock: Set at least one of --n-int, --n-cont"
     d_ints = parse_numerical_ranges(params['--n-int'])
     d_conts = parse_numerical_ranges(params['--n-cont'])
@@ -92,7 +92,7 @@ def construct_rosenbrock(params):
 
 # Six-hump camel
 def construct_sixhumpcamel(params):
-    from problems.sixhumpcamel import Sixhumpcamel
+    from EXPObench.expensiveoptimbenchmark.problems.sixhumpcamel import Sixhumpcamel
     assert params['--n-int'] != '0' or params[
         '--n-cont'] != '0', "Six-hump camel: Set at least one of --n-int, --n-cont"
     d_ints = parse_numerical_ranges(params['--n-int'])
@@ -105,7 +105,7 @@ def construct_sixhumpcamel(params):
 
 # Six-hump camel (constrained)
 def construct_sixhumpcamel_constrained(params):
-    from problems.sixhumpcamel_constrained import Sixhumpcamel_constrained
+    from EXPObench.expensiveoptimbenchmark.problems.sixhumpcamel_constrained import Sixhumpcamel_constrained
     assert params['--n-int'] != '0' or params[
         '--n-cont'] != '0', "Six-hump camel: Set at least one of --n-int, --n-cont"
     d_ints = parse_numerical_ranges(params['--n-int'])
@@ -118,7 +118,7 @@ def construct_sixhumpcamel_constrained(params):
 
 # Linear MIVABO Function
 def construct_linearmivabo(params):
-    from problems.linear_MIVABOfunction import Linear
+    from EXPObench.expensiveoptimbenchmark.problems.linear_MIVABOfunction import Linear
 
     num_vars_d = int(params.get('--dd'))
     num_vars_c = int(params.get('--dc'))
@@ -134,7 +134,7 @@ def construct_linearmivabo(params):
 
 # floris wake simulator
 def construct_windwake(params):
-    from problems.windwake import WindWakeLayout
+    from EXPObench.expensiveoptimbenchmark.problems.windwake import WindWakeLayout
     sim_info_file = params['--file']
     n_samples = int(params['--n-samples']) if params['--n-samples'] != 'None' else None
     wind_seed = int(params['--wind-seed'])
@@ -148,7 +148,7 @@ def construct_windwake(params):
 
 # MaxCut function
 def construct_maxcut(params):
-    from problems.maxcut import MaxCut
+    from EXPObench.expensiveoptimbenchmark.problems.maxcut import MaxCut
     ds = parse_numerical_ranges(params['-d'])
     graph_seeds = parse_numerical_ranges(params['--graph-seed'])
 
@@ -156,7 +156,7 @@ def construct_maxcut(params):
 
 
 def construct_windwakeh(params):
-    from problems.windwakeheight import WindWakeHeightLayout
+    from EXPObench.expensiveoptimbenchmark.problems.windwakeheight import WindWakeHeightLayout
     sim_info_file = params['--file']
     wind_seed = int(params['--wind-seed'])
     n_turbines = int(params['-n'])
@@ -167,13 +167,13 @@ def construct_windwakeh(params):
 
 
 def construct_hponaive(params):
-    from problems.hpo import HPOSFP
+    from EXPObench.expensiveoptimbenchmark.problems.hpo import HPOSFP
     instance_info_folder = params['--folder']
     return [HPOSFP(instance_info_folder, naive=True)]
 
 
 def construct_hpo(params):
-    from problems.hpo import HPOSFP
+    from EXPObench.expensiveoptimbenchmark.problems.hpo import HPOSFP
     instance_info_folder = params['--folder']
     return [HPOSFP(instance_info_folder)]
 
@@ -298,7 +298,7 @@ def generate_construct_synthetic(fn):
 
 
 # Add syntheticfunctions.
-from problems.syntheticfunctions import fns
+from EXPObench.expensiveoptimbenchmark.problems.syntheticfunctions import fns
 
 problems.update({
     fn.name: {
@@ -309,7 +309,7 @@ problems.update({
     for fn in fns
 })
 
-from problems.DockerCFDBenchmark import dockersimbenches
+from EXPObench.expensiveoptimbenchmark.problems.DockerCFDBenchmark import dockersimbenches
 
 problems.update({
     dockerproblem.name.lower(): {
@@ -320,7 +320,7 @@ problems.update({
     for dockerproblem in dockersimbenches
 })
 
-from problems.DockerHospitalBenchmark import dockerhospitalsimbenches
+from EXPObench.expensiveoptimbenchmark.problems.DockerHospitalBenchmark import dockerhospitalsimbenches
 
 problems.update({
     dockerproblem.name.lower(): {
@@ -445,7 +445,7 @@ def execute_hyperopt(params, problem, max_eval, log):
 
 
 def execute_hyperopt_rnd(params, problem, max_eval, log):
-    from solvers.hyperopt.whyperopt import optimize_hyperopt_rnd
+    from EXPObench.expensiveoptimbenchmark.solvers.hyperopt.whyperopt import optimize_hyperopt_rnd
 
     conversion_params = {
         'int_conversion_mode': params.get('--int-conversion-mode')
@@ -486,7 +486,6 @@ def execute_smac(params, problem, max_eval, log):
 
 
 def check_smac():
-    from solvers.smac.wsmac import optimize_smac
     pass
 
 
@@ -528,7 +527,7 @@ def execute_ga(params, problem, max_eval, log):
     from wga import optimize_GA
     return optimize_GA(problem=problem,
                        max_evals=max_eval,
-                       rand_evals=params["rand_evals"],
+                       rand_evals=params["--rand-evals"],
                        seed=params["seed"],
                        log=log)
 
@@ -867,19 +866,24 @@ os.makedirs(out_path, exist_ok=True)
 
 t = time.time()
 rnd = random.randint(1, 1 << 14)
-logfile_iters = f"{out_path}experiment_{problem['name']}_{t}_{rnd}_iters.csv"
-logfile_summary = f"{out_path}experiment_{problem['name']}_{t}_{rnd}_summ.csv"
-
-loginfo = {
-    'file_iters': logfile_iters,
-    'file_summary': logfile_summary,
-    'write_every': write_every,
-    'emit_header': True
-}
 
 for solver in current_solvers:
     for problem_instance in problems:
         for r in range(repetitions):
+            logfile_iters = os.path.join(out_path,
+                                         ".".join([solver["name"], str(problem_instance).lower().split("(")[0], str(r),
+                                                   "iters", "csv"]))
+            logfile_summary = os.path.join(out_path,
+                                           ".".join(
+                                               [solver["name"], str(problem_instance).lower().split("(")[0], str(r),
+                                                "summary", "csv"]))
+            loginfo = {
+                'file_iters': logfile_iters,
+                'file_summary': logfile_summary,
+                'write_every': write_every,
+                'emit_header': True
+            }
+
             if solver["name"] == "ga":
                 solver["params"]["seed"] = r
             solY, solX, monitor = solver['info']['executor'](solver['params'], problem_instance, max_eval, log=loginfo)

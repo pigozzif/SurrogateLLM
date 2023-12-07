@@ -29,6 +29,7 @@ def optimize_GA(problem, max_evals, rand_evals, seed, log=None):
         monitor.commit_start_eval()
         r = problem.evaluate(x)
         monitor.commit_end_eval(x, r)
+        return r
 
     monitor.start()
     evaluated = 0
