@@ -1,4 +1,4 @@
-from ExpensiveOptimBenchmark.expensiveoptimbenchmark.solvers.utils import Monitor
+from EXPObench.expensiveoptimbenchmark.solvers.utils import Monitor
 from evo.evolution.algorithms import GeneticAlgorithm
 from evo.evolution.objectives import ObjectiveDict
 
