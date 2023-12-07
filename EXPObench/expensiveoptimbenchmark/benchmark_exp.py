@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 import enum
 from argparse import ArgumentParser
-from plot_utils import plot_iter_file
+from plot_results import plot_iter_file
 
 class Strategies(enum.Enum):
     idone = 0
