@@ -14,6 +14,7 @@ def read_files(path):
         d["problem"] = file.split(".")[1]
         d["seed"] = int(file.split(".")[2])
         d["iter_idx"] = d.apply(lambda row: int(row["iter_idx"]), axis=1)
+        d = d[~d.str.contains("iter_idx", na=False)]
         d["iter_total_time"] = d["iter_eval_time"] + d["iter_model_time"]
         d["iter_total_time"] = d["iter_total_time"].cumsum()
         if data is None:

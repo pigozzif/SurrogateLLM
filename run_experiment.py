@@ -666,7 +666,7 @@ solvers = {
     }
 }
 
-general_args = {'--repetitions', '--max-eval', '--out-path', '--write-every', '--rand-evals-all'}
+general_args = {'--repetitions', '--max-eval', '--out-path', '--write-every', '--rand-evals-all', "--seed"}
 
 # Parse
 general = {
@@ -791,6 +791,7 @@ while len(args) > i and args[i].startswith("-"):
 repetitions = int(general['--repetitions'])
 max_eval = int(general['--max-eval'])
 out_path = general['--out-path']
+seed = int(general["--seed"])
 write_every = None if general['--write-every'] == "none" else int(general['--write-every'])
 rand_evals_default = general.get('--rand-evals-all')
 
@@ -871,12 +872,18 @@ for solver in current_solvers:
     for problem_instance in problems:
         for r in range(repetitions):
             logfile_iters = os.path.join(out_path,
-                                         ".".join([solver["name"], str(problem_instance).lower().split("(")[0], str(r),
-                                                   "iters", "csv"]))
+                                         ".".join([solver["name"],
+                                                   str(problem_instance).lower().split("(")[0],
+                                                   str(seed),
+                                                   "iters",
+                                                   "csv"]))
             logfile_summary = os.path.join(out_path,
                                            ".".join(
-                                               [solver["name"], str(problem_instance).lower().split("(")[0], str(r),
-                                                "summary", "csv"]))
+                                               [solver["name"],
+                                                str(problem_instance).lower().split("(")[0],
+                                                str(seed),
+                                                "summary",
+                                                "csv"]))
             loginfo = {
                 'file_iters': logfile_iters,
                 'file_summary': logfile_summary,
@@ -885,7 +892,7 @@ for solver in current_solvers:
             }
 
             if solver["name"] == "ga":
-                solver["params"]["seed"] = r
+                solver["params"]["seed"] = seed
             solY, solX, monitor = solver['info']['executor'](solver['params'], problem_instance, max_eval, log=loginfo)
             with open(logfile_iters, 'a') as f:
                 from_iter = 0
