@@ -33,12 +33,10 @@ def optimize_GA(problem, max_evals, rand_evals, seed, log=None):
 
     monitor.start()
     evaluated = 0
-    j = 0
     while evaluated < max_evals:
         solutions = ga.ask()
         fitness_list = [f(x) for x in solutions]
         ga.tell(fitness_list)
         evaluated += len(solutions)
-        j += 1
     monitor.end()
     return monitor.best_x, monitor.best_fitness, monitor
