@@ -21,12 +21,12 @@ def set_seed(seed):
 def run_problems(args):
     s, solver = args
     set_seed(s)
-    # os.system("python run_experiment.py --max-eval=1000 windwake --file=EXPObench/expensiveoptimbenchmark/problems/example_input_windwake.json {}".format(solver))
-    # os.system("python run_experiment.py --max-eval=1000 esp {}".format(solver))
-    # os.system("python run_experiment.py --max-eval=1000 pitzdaily {}".format(solver))
-    # os.system("python run_experiment.py --max-eval=1000 hpo {}".format(solver))
-    os.system("python run_experiment.py --max-eval=1000 --seed={0} rosenbrock --n-cont=10 {1}".format(s, solver))
-    os.system("python run_experiment.py --max-eval=1000 --seed={0} rosen {1}".format(s, solver))
+    # os.system("python expensiveoptimbenchmark/run_experiment.py --max-eval=1000 --seed={0} windwake --file=EXPObench/expensiveoptimbenchmark/problems/example_input_windwake.json {1}".format(s, solver))
+    # os.system("python expensiveoptimbenchmark/run_experiment.py --max-eval=1000 --seed={0} esp {1}".format(s, solver))
+    # os.system("python expensiveoptimbenchmark/run_experiment.py --max-eval=1000 --seed={0} pitzdaily {1}".format(s, solver))
+    # os.system("python expensiveoptimbenchmark/run_experiment.py --max-eval=1000 --seed={0} hpo {1}".format(s, solver))
+    os.system("python expensiveoptimbenchmark/run_experiment.py --max-eval=1000 --seed={0} rosenbrock --n-cont=10 {1}".format(s, solver))
+    os.system("python expensiveoptimbenchmark/run_experiment.py --max-eval=1000 --seed={0} rosen {1}".format(s, solver))
 
 
 if __name__ == "__main__":
