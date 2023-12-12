@@ -44,7 +44,7 @@ colorama==0.4.3; sys_platform == "win32" \
 coloredlogs==14.0 \
     --hash=sha256:346f58aad6afd48444c2468618623638dadab76e4e70d5e10822676f2d32226a \
     --hash=sha256:a1fab193d2053aa6c0a97608c4342d031f1f93a3d1218432c59322441d31a505
-configspace==0.7.2 \
+configspace==0.4.13 \
     --hash=sha256:9f2bc612a435417a68c05b4a1e0cc5f538534c31ae3da38aed383087fb94c611
 cycler==0.10.0 \
     --hash=sha256:1d8a5ae1ff6c5cf9b93e8811e581232ad8920aeec647c37316ceac982b08cb2d \
