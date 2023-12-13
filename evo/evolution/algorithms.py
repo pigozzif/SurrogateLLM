@@ -1,8 +1,6 @@
 import abc
-import os
 import random
 from abc import ABC
-from multiprocessing import Pool
 from typing import Dict
 
 from .objectives import ObjectiveDict
@@ -11,9 +9,7 @@ from .selection.filters import Filter
 from .selection.selector import Selector
 from ..representations.factory import GenotypeFactory
 from ..representations.population import Population, Individual, Comparator
-from ..utils.utilities import weighted_random_by_dct, fill_morphology
-
-import neat
+from ..utils.utilities import weighted_random_by_dct
 
 
 class StochasticSolver(abc.ABC):
@@ -186,67 +182,6 @@ class AFPO(GeneticAlgorithm):
             self._trim_population()
         self.pop.gen += 1
         self.pop.update_ages()
-
-
-class NEAT(StochasticSolver):
-
-    def __init__(self, seed, num_params, pop_size, num_inputs, num_outputs, np, fitness_func, **kwargs):
-        super().__init__(seed, num_params, pop_size)
-        config_path = os.path.join(os.getcwd(), "biofilms/evo/evolution/config-neat")
-        self.np = np
-        self.num_inputs = num_inputs
-        self.num_outputs = num_outputs
-        self.fitness_func = fitness_func
-        self.kwargs = kwargs
-        self._write_config(config_path=config_path)
-        config_path += "-temp"
-        self.config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                                  neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                                  config_path)
-        self.pop = neat.Population(self.config)
-        stats = neat.StatisticsReporter()
-        self.pop.add_reporter(stats)
-        self.evaluated = set()
-        self.best = None
-        os.remove(os.path.join(os.getcwd(), config_path))
-
-    def _write_config(self, config_path):
-        with open(config_path, "r") as file:
-            config_file = file.read()
-        config_file = config_file.replace("<0>", str(self.pop_size))
-        config_file = config_file.replace("<1>", str(self.num_inputs))
-        config_file = config_file.replace("<2>", str(self.num_outputs))
-        with open(config_path + "-temp", "w") as file:
-            file.write(config_file)
-
-    def _fitness_func_wrap(self, genomes, config, gen):
-        genomes = list(filter(lambda x: x[0] not in self.evaluated, genomes))
-        with Pool(self.np) as pool:
-            results = pool.map(self.fitness_func, [(fill_morphology(genome=genomes[i][1],
-                                                                    neat_config=config,
-                                                                    config=self.kwargs["config"]),
-                                                    i,
-                                                    self.kwargs["config"]) for i in range(len(genomes))])
-        for x, _ in genomes:
-            self.evaluated.add(x)
-        for genome, fitness in zip([value for _, value in sorted(genomes, key=lambda x: x[0])],
-                                   [value for _, value in sorted(results, key=lambda x: x[0])]):
-            genome.fitness = fitness
-
-    def ask(self):
-        winner = self.pop.run(self._fitness_func_wrap, n=1)
-        if self.best is None or winner.fitness <= self.best.fitness:
-            self.best = winner
-        return []
-
-    def tell(self, fitness_list):
-        return
-
-    def result(self):
-        return self.best, self.best.fitness
-
-    def get_num_evaluated(self):
-        return len(self.evaluated)
 
 
 class CMAES(StochasticSolver):
