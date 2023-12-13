@@ -5,7 +5,7 @@ import traceback
 
 import numpy as np
 
-from vendor.methods.CoCaBO import CoCaBO
+from .vendor.methods.CoCaBO import CoCaBO
 
 from collections import Counter
 from ..utils import Monitor
