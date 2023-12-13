@@ -3,7 +3,6 @@ import random
 
 import numpy as np
 from scipy import ndimage
-import neat
 
 
 def set_seed(seed):
@@ -44,15 +43,3 @@ def parse_largest_component(solution):
     if not (largest_component_mask[0, w // 2] and largest_component_mask[h - 1, round(w * 0.3)] and largest_component_mask[h - 1, round(w * 0.6)]):
         return None
     return largest_component_mask
-
-
-def fill_morphology(genome, neat_config, config):
-    morphology = np.zeros((config.h - 2, config.w - 2))
-    net = neat.nn.FeedForwardNetwork.create(genome, neat_config)
-    cx, cy = morphology.shape[0] // 2, morphology.shape[1] // 2
-    for x in range(morphology.shape[0]):
-        for y in range(morphology.shape[1]):
-            d = math.sqrt((x - cx) ** 2 + (y - cy) ** 2)
-            morphology[x, y] = net.activate([x, y, d])[0]
-    print(morphology.min(), morphology.max())
-    return morphology
