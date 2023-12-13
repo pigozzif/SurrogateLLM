@@ -21,9 +21,10 @@ def optimize_GA(problem, max_evals, rand_evals, seed, log=None):
                           genotype_filter=None,
                           tournament_size=5,
                           mu=0.0,
-                          sigma=0.1,
+                          sigma=0.01,
                           n=problem.dims(),
-                          range=(min(problem.lbs()), max(problem.ubs())))
+                          lbs=problem.lbs(),
+                          ubs=problem.ubs())
 
     def f(x):
         monitor.commit_start_eval()
