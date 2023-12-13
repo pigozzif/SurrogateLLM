@@ -97,7 +97,7 @@ def data_to_X_and_y(data):
     # Turn features into an array
     X = np.asarray(data.drop(class_headers, axis=1))
     # And classes into an array of strings.
-    y = class_headers[np.argmax(np.asarray(data[class_headers]), axis=1)]
+    y = np.argmax(np.asarray(data[class_headers]), axis=1)
 
     return X, y
 
