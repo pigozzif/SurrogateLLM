@@ -534,6 +534,18 @@ def execute_ga(params, problem, max_eval, log):
                        log=log)
 
 
+def get_problem_name(problem_instance):
+    if "Wind" in problem_instance:
+        return "windwake"
+    elif "ESP" in problem_instance:
+        return "esp"
+    elif "PitzDaily" in problem_instance:
+        return "pitzdaily"
+    elif "HPOSFP" in problem_instance:
+        return "hpo"
+    return problem_instance.lower().split("(")[0]
+
+
 solvers = {
     'idone': {
         'args': {'--model', '--binarize-categorical', '--binarize-int', '--rand-evals', '--scaling', '--sampling',
@@ -876,7 +888,7 @@ for solver in current_solvers:
         for r in range(repetitions):
             logfile_iters = os.path.join(out_path,
                                          ".".join([solver["name"],
-                                                   str(problem_instance).lower().split("(")[0],
+                                                   get_problem_name(str(problem_instance)),
                                                    str(seed),
                                                    "iters",
                                                    "csv"]))
