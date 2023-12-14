@@ -22,14 +22,14 @@ def run_problems(args):
     pidx, config = args
     # config.s = pidx
     set_seed(config.s)
-    #if pidx == 0:
-    #    os.system("python3 run_experiment.py --max-eval=1000 --seed={0} windwake --file=expensiveoptimbenchmark/problems/example_input_windwake.json {1}".format(config.s, config.solver))
-    #elif pidx == 1:
-    #    os.system("python3 run_experiment.py --max-eval=1000 --seed={0} esp {1}".format(config.s, config.solver))
-    #elif pidx == 2:
-    #    os.system("python3 run_experiment.py --max-eval=1000 --seed={0} pitzdaily {1}".format(config.s, config.solver))
-    #elif pidx == 3:
-    #    os.system("python3 run_experiment.py --max-eval=1000 --seed={0} --folder=expensiveoptimbenchmark/problems/steel+plates+faults hpo {1}".format(config.s, config.solver))
+    if pidx == 0:
+        os.system("python3 run_experiment.py --max-eval=1000 --seed={0} windwake --file=expensiveoptimbenchmark/problems/example_input_windwake.json {1}".format(config.s, config.solver))
+    elif pidx == 1:
+        os.system("python3 run_experiment.py --max-eval=1000 --seed={0} esp {1}".format(config.s, config.solver))
+    elif pidx == 2:
+        os.system("python3 run_experiment.py --max-eval=1000 --seed={0} pitzdaily {1}".format(config.s, config.solver))
+    elif pidx == 3:
+        os.system("python3 run_experiment.py --max-eval=1000 --seed={0} --folder=expensiveoptimbenchmark/problems/steel+plates+faults hpo {1}".format(config.s, config.solver))
     #os.system("python run_experiment.py --max-eval=1000 --seed={0} rosenbrock --n-cont=10 {1}".format(config.s, config.solver))
     #os.system("python run_experiment.py --max-eval=1000 --seed={0} rosen {1}".format(config.s, config.solver))
     #os.system("python run_experiment.py --max-eval=1000 --seed={0} convex -d=1000 {1}".format(config.s, config.solver))
