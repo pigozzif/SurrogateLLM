@@ -3,7 +3,7 @@ from evo.evolution.algorithms import GeneticAlgorithm
 from evo.evolution.objectives import ObjectiveDict
 
 
-def optimize_GA(problem, max_evals, rand_evals, seed, log=None):
+def optimize_GA(problem, max_evals, rand_evals, seed, sigma, log=None):
     monitor = Monitor("ga", problem=problem, log=log)
     objectives_dict = ObjectiveDict()
     objectives_dict.add_objective(name="fitness", maximize=False, best_value=0.0, worst_value=float("inf"))
@@ -21,7 +21,7 @@ def optimize_GA(problem, max_evals, rand_evals, seed, log=None):
                           genotype_filter=None,
                           tournament_size=5,
                           mu=0.0,
-                          sigma=0.01,
+                          sigma=sigma,
                           n=problem.dims(),
                           lbs=problem.lbs(),
                           ubs=problem.ubs())

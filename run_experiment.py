@@ -529,6 +529,7 @@ def execute_ga(params, problem, max_eval, log):
                        max_evals=max_eval,
                        rand_evals=params["--rand-evals"],
                        seed=params["seed"],
+                       sigma=params["--sigma"],
                        log=log)
 
 
@@ -657,9 +658,10 @@ solvers = {
         'check': nop
     },
     "ga": {
-        "args": {"--rand-evals"},
+        "args": {"--rand-evals", "--sigma"},
         "defaults": {
-            "--rand-evals": 20
+            "--rand-evals": 20,
+            "--sigma": 0.1
         },
         "executor": execute_ga,
         "check": nop
@@ -877,13 +879,11 @@ for solver in current_solvers:
                                                    str(seed),
                                                    "iters",
                                                    "csv"]))
-            logfile_summary = os.path.join(out_path,
-                                           ".".join(
-                                               [solver["name"],
-                                                str(problem_instance).lower().split("(")[0],
-                                                str(seed),
-                                                "summary",
-                                                "csv"]))
+            if "ga" in logfile_iters:
+                logfile_iters = logfile_iters.replace("iters", ".".join([str(solver["params"]["--sigma"]).replace(".",
+                                                                                                                  ","),
+                                                                         "iters"]))
+            logfile_summary = logfile_iters.replace("iters", "summary")
             loginfo = {
                 'file_iters': logfile_iters,
                 'file_summary': logfile_summary,
