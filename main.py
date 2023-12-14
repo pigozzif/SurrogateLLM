@@ -10,6 +10,7 @@ def parse_args():
     parser.add_argument("--s", type=int, default=0, help="random seed")
     parser.add_argument("--pids", type=str, default="0-1", help="problem ids")
     parser.add_argument("--solver", type=str, default="randomsearch", help="solver")
+    parser.add_argument("--evals", type=int, default=1000, help="maximum evaluations")
     return parser.parse_args()
 
 
@@ -23,16 +24,16 @@ def run_problems(args):
     # config.s = pidx
     set_seed(config.s)
     if pidx == 0:
-        os.system("python3 run_experiment.py --max-eval=1000 --seed={0} windwake --file=expensiveoptimbenchmark/problems/example_input_windwake.json {1}".format(config.s, config.solver))
+        os.system("python3 run_experiment.py --max-eval={0} --seed={1} windwake --file=expensiveoptimbenchmark/problems/example_input_windwake.json {2}".format(config.evals, config.s, config.solver))
     elif pidx == 1:
-        os.system("python3 run_experiment.py --max-eval=1000 --seed={0} esp {1}".format(config.s, config.solver))
+        os.system("python3 run_experiment.py --max-eval={0} --seed={1} esp {2}".format(config.evals, config.s, config.solver))
     elif pidx == 2:
-        os.system("python3 run_experiment.py --max-eval=1000 --seed={0} pitzdaily {1}".format(config.s, config.solver))
+        os.system("python3 run_experiment.py --max-eval={0} --seed={1} pitzdaily {2}".format(config.evals, config.s, config.solver))
     elif pidx == 3:
-        os.system("python3 run_experiment.py --max-eval=1000 --seed={0} hpo --folder=expensiveoptimbenchmark/problems/steel+plates+faults {1}".format(config.s, config.solver))
-    # os.system("python run_experiment.py --max-eval=1000 --seed={0} rosenbrock --n-cont=10 {1}".format(config.s, config.solver))
-    # os.system("python run_experiment.py --max-eval=1000 --seed={0} rosen {1}".format(config.s, config.solver))
-    # os.system("python run_experiment.py --max-eval=1000 --seed={0} convex -d=1000 {1}".format(config.s, config.solver))
+        os.system("python3 run_experiment.py --max-eval={0} --seed={1} hpo --folder=expensiveoptimbenchmark/problems/steel+plates+faults {2}".format(config.evals, config.s, config.solver))
+    # os.system("python run_experiment.py --max-eval={0} --seed={1} rosenbrock --n-cont=10 {2}".format(config.evals, config.s, config.solver))
+    # os.system("python run_experiment.py --max-eval={0} --seed={1} rosen {2}".format(config.s, config.solver))
+    # os.system("python run_experiment.py --max-eval={0} --seed={1} convex -d=1000 {2}".format(config.evals, config.s, config.solver))
 
 
 if __name__ == "__main__":
@@ -41,6 +42,4 @@ if __name__ == "__main__":
     # with Pool(5) as pool:
     #     results = pool.map(run_problems, [(i, args) for i in range(5)])
     for pidx in pids:
-        if args.s == 0 and pidx == 0:
-            continue
         run_problems((pidx, args))

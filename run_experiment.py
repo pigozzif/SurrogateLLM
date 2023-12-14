@@ -471,7 +471,8 @@ def execute_pygpgo(params, problem, max_eval, log):
 
 ## bayesian-optimization
 def execute_bayesianoptimization(params, problem, max_eval, log):
-    from expensiveoptimbenchmark.solvers.bayesianoptimization.wbayesianoptimization import optimize_bayesian_optimization
+    from expensiveoptimbenchmark.solvers.bayesianoptimization.wbayesianoptimization import \
+        optimize_bayesian_optimization
     rand_evals = int(params['--rand-evals'])
     # TODO: Allow picking different configurations?
     return optimize_bayesian_optimization(problem, max_eval, random_init_evals=rand_evals, log=log)
