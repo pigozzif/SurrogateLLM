@@ -41,4 +41,6 @@ if __name__ == "__main__":
     # with Pool(5) as pool:
     #     results = pool.map(run_problems, [(i, args) for i in range(5)])
     for pidx in pids:
+        if args.s == 0 and pidx == 0:
+            continue
         run_problems((pidx, args))
