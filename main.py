@@ -34,11 +34,6 @@ def parallel_solve(solver, config, listener):
     evaluated = 0
     j = 0
     while evaluated < config.evals:
-        # solutions = solver.ask()
-        # before_time = time.time()
-        # fitness_list = [eval(config.p + "({})".format(list(x))) for x in solutions]
-        # after_time = time.time()
-        # solver.tell(fitness_list)
         solver.solve()
         result = solver.result()  # first element is the best solution, second element is the best fitness
         evaluated = solver.get_num_evaluated()
@@ -47,8 +42,6 @@ def parallel_solve(solver, config, listener):
         listener.listen(**{"iteration": j,
                            "evaluations": evaluated,
                            "time.total": time.time() - start_time,
-                           # "time.model": before_time - after_time,
-                           # "time.eval": after_time - before_time,
                            "best.fitness": result[1]})
         if result[1] <= best_fitness:
             best_fitness = result[1]
@@ -63,8 +56,6 @@ def run_problem(args):
     listener = FileListener(file_name=file_name, header=["iteration",
                                                          "evaluations",
                                                          "time.total",
-                                                         # "time.model",
-                                                         # "time.eval",
                                                          "best.fitness"])
     solver = create_solver(s=s, config=config)
     return parallel_solve(solver=solver, config=config, listener=listener)
@@ -74,28 +65,3 @@ if __name__ == "__main__":
     arguments = parse_args()
     with Pool(arguments.s) as pool:
         results = pool.map(run_problem, [(arguments, i) for i in range(arguments.s)])
-
-# def run_problems(args):
-#     pidx, config = args
-# config.s = pidx
-#     set_seed(config.s)
-#     if pidx == 0:
-#         os.system("python3 run_experiment.py --max-eval={0} --seed={1} windwake --file=expensiveoptimbenchmark/problems/example_input_windwake.json {2}".format(config.evals, config.s, config.solver))
-#    elif pidx == 1:
-#         os.system("python3 run_experiment.py --max-eval={0} --seed={1} esp {2}".format(config.evals, config.s, config.solver))
-#     elif pidx == 2:
-#         os.system("python3 run_experiment.py --max-eval={0} --seed={1} pitzdaily {2}".format(config.evals, config.s, config.solver))
-#     elif pidx == 3:
-#         os.system("python3 run_experiment.py --max-eval={0} --seed={1} hpo --folder=expensiveoptimbenchmark/problems/steel+plates+faults {2}".format(config.evals, config.s, config.solver))
-# os.system("python run_experiment.py --max-eval={0} --seed={1} rosenbrock --n-cont=10 {2}".format(config.evals, config.s, config.solver))
-# os.system("python run_experiment.py --max-eval={0} --seed={1} rosen {2}".format(config.s, config.solver))
-# os.system("python run_experiment.py --max-eval={0} --seed={1} convex -d=1000 {2}".format(config.evals, config.s, config.solver))
-
-
-# if __name__ == "__main__":
-#     args = parse_args()
-#     pids = [int(pid) for pid in args.pids.split("-")]
-# with Pool(5) as pool:
-#     results = pool.map(run_problems, [(i, args) for i in range(5)])
-#      for pidx in pids:
-#         run_problems((pidx, args))
