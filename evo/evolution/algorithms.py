@@ -37,22 +37,6 @@ class StochasticSolver(abc.ABC):
     def get_num_evaluated(self):
         return
 
-    @classmethod
-    def create_solver(cls, name: str, **kwargs):
-        if name == "rs":
-            return RandomSearch(**kwargs)
-        elif name == "ga":
-            return GeneticAlgorithm(**kwargs)
-        elif name == "afpo":
-            return AFPO(**kwargs)
-        elif name == "cmaes":
-            return CMAES(**kwargs)
-        elif name == "nsgaii":
-            return NSGAII(**kwargs)
-        elif name == "gpgo":
-            return GPGO(**kwargs)
-        raise ValueError("Invalid solver name: {}".format(name))
-
 
 class GPGO(StochasticSolver):
 
@@ -146,10 +130,10 @@ class PopulationBasedSolver(StochasticSolver, ABC):
 
 class RandomSearch(PopulationBasedSolver):
 
-    def __init__(self, seed, num_params, pop_size, objectives_dict, range):
+    def __init__(self, seed, num_params, objectives_dict, range):
         super().__init__(seed=seed,
                          num_params=num_params,
-                         pop_size=pop_size,
+                         pop_size=1,
                          genotype_factory="uniform_float",
                          objectives_dict=objectives_dict,
                          remap=False,

@@ -8,11 +8,12 @@ from cec2010.functions import *
 from evo.evolution.algorithms import StochasticSolver
 from evo.evolution.objectives import ObjectiveDict
 from evo.listeners.listener import FileListener
+from evo.utils.utilities import create_solver
 
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="SurrogateOptimization")
-    parser.add_argument("--s", type=int, default=0, help="seeds")
+    parser.add_argument("--s", type=int, default=1, help="seeds")
     parser.add_argument("--p", type=str, default="sphere", help="problem")
     parser.add_argument("--solver", type=str, default="ga", help="solver")
     parser.add_argument("--n_params", type=int, default=10, help="solution size")
@@ -58,29 +59,13 @@ def parallel_solve(solver, config, listener):
 def run_problem(args):
     config, s = args
     file_name = ".".join([config.solver, config.p, str(s), "txt"])
-    objectives_dict = ObjectiveDict()
-    objectives_dict.add_objective(name="fitness", maximize=False, best_value=0.0, worst_value=float("inf"))
     listener = FileListener(file_name=file_name, header=["iteration",
                                                          "evaluations",
                                                          "time.total",
                                                          "time.model",
                                                          "time.eval",
                                                          "best.fitness"])
-    solver = StochasticSolver.create_solver(name=config.solver,
-                                            seed=s,
-                                            num_params=config.n_params,
-                                            pop_size=20,
-                                            genotype_factory="uniform_float",
-                                            objectives_dict=objectives_dict,
-                                            offspring_size=20,
-                                            remap=False,
-                                            genetic_operators={"gaussian_mut": 1.0},
-                                            genotype_filter=None,
-                                            tournament_size=5,
-                                            mu=0.0,
-                                            sigma=0.1,
-                                            n=config.n_params,
-                                            range=(-5.0, 5.0))
+    solver = create_solver(s=s, config=config)
     return parallel_solve(solver=solver, config=config, listener=listener)
 
 
