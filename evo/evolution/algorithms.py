@@ -3,6 +3,8 @@ import random
 from abc import ABC
 from typing import Dict
 
+import numpy as np
+
 from .objectives import ObjectiveDict
 from .operators.operator import GeneticOperator
 from .selection.filters import Filter
@@ -37,17 +39,79 @@ class StochasticSolver(abc.ABC):
 
     @classmethod
     def create_solver(cls, name: str, **kwargs):
-        if name == "ga":
+        if name == "rs":
+            return RandomSearch(**kwargs)
+        elif name == "ga":
             return GeneticAlgorithm(**kwargs)
         elif name == "afpo":
             return AFPO(**kwargs)
-        elif name == "neat":
-            return NEAT(**kwargs)
         elif name == "cmaes":
             return CMAES(**kwargs)
         elif name == "nsgaii":
             return NSGAII(**kwargs)
+        elif name == "gpgo":
+            return GPGO(**kwargs)
         raise ValueError("Invalid solver name: {}".format(name))
+
+
+class GPGO(StochasticSolver):
+
+    def __init__(self, seed, num_params, f, range, init_evals=3):
+        super().__init__(seed=seed,
+                         num_params=num_params,
+                         pop_size=1)
+
+        from pyGPGO.covfunc import matern32
+        from pyGPGO.acquisition import Acquisition
+        from pyGPGO.surrogates.GaussianProcess import GaussianProcess
+        from pyGPGO.GPGO import GPGO
+        cov = matern32()
+        gp = GaussianProcess(cov)
+        acq = Acquisition(mode="UCB")
+        param = {"x{}".format(i): ("cont", list(range)) for i in range(num_params)}
+        self.gpgo = GPGO(gp, acq, f, param)
+        self.it = 0
+        self.init_evals = init_evals
+
+    def _firstRun(self):
+        self.gpgo.X = np.empty((self.init_evals, len(self.gpgo.parameter_key)))
+        self.gpgo.y = np.empty((self.init_evals,))
+        for i in range(self.init_evals):
+            s_param = self.gpgo._sampleParam()
+            s_param_val = list(s_param.values())
+            self.gpgo.X[i] = s_param_val
+
+    def _updateGP(self, f_new):
+        self.gpgo.GP.update(np.atleast_2d(self.gpgo.best), np.atleast_1d(f_new))
+        self.gpgo.tau = np.max(self.gpgo.GP.y)
+        self.gpgo.history.append(self.gpgo.tau)
+
+    def ask(self):
+        if self.it == 0:
+            self._firstRun()
+            self.gpgo.logger._printInit(self)
+            return [self.gpgo.X[i] for i in range(self.init_evals)]
+        self.gpgo._optimizeAcq()
+        return self.gpgo.best
+
+    def tell(self, fitness_list):
+        if self.it == 0:
+            for i in range(self.init_evals):
+                self.gpgo.y[i] = fitness_list[i]
+            self.gpgo.GP.fit(self.gpgo.X, self.gpgo.y)
+            self.gpgo.tau = np.max(self.gpgo.y)
+            self.gpgo.history.append(self.gpgo.tau)
+            self.gpgo.logger._printInit(self.gpgo)
+        self.gpgo._optimizeAcq()
+        self._updateGP(f_new=fitness_list[0])
+        self.gpgo.logger._printCurrent(self.gpgo)
+
+    def result(self):
+        best_genotype, best_fitness = self.gpgo.getResult()
+        return [v for v in best_genotype.values()], best_fitness
+
+    def get_num_evaluated(self):
+        return len(self.gpgo.history)
 
 
 class PopulationBasedSolver(StochasticSolver, ABC):
@@ -82,7 +146,7 @@ class PopulationBasedSolver(StochasticSolver, ABC):
 
 class RandomSearch(PopulationBasedSolver):
 
-    def __init__(self, seed, num_params, pop_size, objectives_dict, range_min, range_max):
+    def __init__(self, seed, num_params, pop_size, objectives_dict, range):
         super().__init__(seed=seed,
                          num_params=num_params,
                          pop_size=pop_size,
@@ -92,7 +156,7 @@ class RandomSearch(PopulationBasedSolver):
                          genetic_operators={},
                          genotype_filter="none",
                          comparator="lexicase",
-                         range=(range_min, range_max),
+                         range=range,
                          n=num_params)
         self.best_fitness = float("inf")
         self.best_genotype = None
@@ -108,8 +172,6 @@ class RandomSearch(PopulationBasedSolver):
         for ind, f in zip([ind for ind in self.pop if not ind.evaluated], fitness_list):
             ind.fitness = {"fitness": f}
             ind.evaluated = True
-
-        import numpy as np
         best_idx = np.argmin(fitness_list)
         if self.best_fitness <= fitness_list[best_idx]:
             self.best_fitness = fitness_list[best_idx]
