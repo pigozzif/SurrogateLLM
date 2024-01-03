@@ -40,7 +40,7 @@ class StochasticSolver(abc.ABC):
 
 class GPGO(StochasticSolver):
 
-    def __init__(self, seed, num_params, f, range, init_evals=3):
+    def __init__(self, seed, num_params, f, r, init_evals=3):
         super().__init__(seed=seed,
                          num_params=num_params,
                          pop_size=1)
@@ -52,10 +52,11 @@ class GPGO(StochasticSolver):
         cov = matern32()
         gp = GaussianProcess(cov)
         acq = Acquisition(mode="UCB")
-        param = {"x{}".format(i): ("cont", list(range)) for i in range(num_params)}
+        param = {"x{}".format(i): ("cont", list(r)) for i in range(num_params)}
         self.gpgo = GPGO(gp, acq, f, param)
         self.it = 0
         self.init_evals = init_evals
+        self.gpgo.init_evals = init_evals
 
     def _firstRun(self):
         self.gpgo.X = np.empty((self.init_evals, len(self.gpgo.parameter_key)))
@@ -73,29 +74,29 @@ class GPGO(StochasticSolver):
     def ask(self):
         if self.it == 0:
             self._firstRun()
-            self.gpgo.logger._printInit(self)
             return [self.gpgo.X[i] for i in range(self.init_evals)]
         self.gpgo._optimizeAcq()
-        return self.gpgo.best
+        return [self.gpgo.best]
 
     def tell(self, fitness_list):
         if self.it == 0:
             for i in range(self.init_evals):
-                self.gpgo.y[i] = fitness_list[i]
+                self.gpgo.y[i] = - fitness_list[i]
             self.gpgo.GP.fit(self.gpgo.X, self.gpgo.y)
             self.gpgo.tau = np.max(self.gpgo.y)
             self.gpgo.history.append(self.gpgo.tau)
-            self.gpgo.logger._printInit(self.gpgo)
+            self.it += 1
+            return
         self.gpgo._optimizeAcq()
-        self._updateGP(f_new=fitness_list[0])
-        self.gpgo.logger._printCurrent(self.gpgo)
+        self._updateGP(f_new=-fitness_list[0])
+        self.it += 1
 
     def result(self):
         best_genotype, best_fitness = self.gpgo.getResult()
-        return [v for v in best_genotype.values()], best_fitness
+        return [v for v in best_genotype.values()], - best_fitness
 
     def get_num_evaluated(self):
-        return len(self.gpgo.history)
+        return len(self.gpgo.history) + self.init_evals - 1
 
 
 class PopulationBasedSolver(StochasticSolver, ABC):
@@ -130,7 +131,7 @@ class PopulationBasedSolver(StochasticSolver, ABC):
 
 class RandomSearch(PopulationBasedSolver):
 
-    def __init__(self, seed, num_params, objectives_dict, range):
+    def __init__(self, seed, num_params, objectives_dict, r):
         super().__init__(seed=seed,
                          num_params=num_params,
                          pop_size=1,
@@ -140,7 +141,7 @@ class RandomSearch(PopulationBasedSolver):
                          genetic_operators={},
                          genotype_filter="none",
                          comparator="lexicase",
-                         range=range,
+                         range=r,
                          n=num_params)
         self.best_fitness = float("inf")
         self.best_genotype = None

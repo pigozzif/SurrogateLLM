@@ -18,7 +18,7 @@ def create_solver(s, config, bounds=(-5, 5)):
         return RandomSearch(seed=s,
                             num_params=config.num_params,
                             objectives_dict=objectives_dict,
-                            range=bounds)
+                            r=bounds)
     elif config.solver == "ga":
         return GeneticAlgorithm(seed=s,
                                 num_params=config.n_params,
@@ -40,6 +40,6 @@ def create_solver(s, config, bounds=(-5, 5)):
     elif config.solver == "gpgo":
         return GPGO(seed=s,
                     num_params=config.n_params,
-                    f=eval(config.p),
-                    range=bounds)
+                    f=None,
+                    r=bounds)
     raise ValueError("Invalid solver name: {}".format(config.solver))

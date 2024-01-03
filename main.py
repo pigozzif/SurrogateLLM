@@ -2,6 +2,7 @@ import argparse
 import logging
 import time
 from multiprocessing import Pool
+import os
 
 from cec2010.functions import *
 from evo.listeners.listener import FileListener
@@ -18,17 +19,25 @@ def parse_args():
     return parser.parse_args()
 
 
+def f(x):
+    # Franke's function (https://www.mathworks.com/help/curvefit/franke.html)
+    one = 0.75 * np.exp(-(9 * x[0] - 2) ** 2 / 4 - (9 * x[1] - 2) ** 2 / 4)
+    two = 0.75 * np.exp(-(9 * x[0] + 1) ** 2 / 49 - (9 * x[1] + 1) / 10)
+    three = 0.5 * np.exp(-(9 * x[0] - 7) ** 2 / 4 - (9 * x[1] - 3) ** 2 / 4)
+    four = 0.25 * np.exp(-(9 * x[0] - 4) ** 2 - (9 * x[1] - 7) ** 2)
+    return one + two + three - four
+
+
 def parallel_solve(solver, config, listener):
     best_result = None
     best_fitness = float("inf")
     start_time = time.time()
     evaluated = 0
     j = 0
-    problem = eval(config.p)
     while evaluated < config.evals:
         solutions = solver.ask()
         before_time = time.time()
-        fitness_list = [problem(x) for x in solutions]
+        fitness_list = [eval(config.p + "({})".format(list(x))) for x in solutions]
         after_time = time.time()
         solver.tell(fitness_list)
         result = solver.result()  # first element is the best solution, second element is the best fitness
@@ -51,7 +60,7 @@ def parallel_solve(solver, config, listener):
 def run_problem(args):
     config, s = args
     set_seed(s)
-    file_name = ".".join([config.solver, config.p, str(s), "txt"])
+    file_name = os.path.join("results", ".".join([config.solver, config.p, str(s), "txt"]))
     listener = FileListener(file_name=file_name, header=["iteration",
                                                          "evaluations",
                                                          "time.total",
@@ -67,10 +76,9 @@ if __name__ == "__main__":
     with Pool(arguments.s) as pool:
         results = pool.map(run_problem, [(arguments, i) for i in range(arguments.s)])
 
-
 # def run_problems(args):
 #     pidx, config = args
-    # config.s = pidx
+# config.s = pidx
 #     set_seed(config.s)
 #     if pidx == 0:
 #         os.system("python3 run_experiment.py --max-eval={0} --seed={1} windwake --file=expensiveoptimbenchmark/problems/example_input_windwake.json {2}".format(config.evals, config.s, config.solver))
@@ -80,15 +88,15 @@ if __name__ == "__main__":
 #         os.system("python3 run_experiment.py --max-eval={0} --seed={1} pitzdaily {2}".format(config.evals, config.s, config.solver))
 #     elif pidx == 3:
 #         os.system("python3 run_experiment.py --max-eval={0} --seed={1} hpo --folder=expensiveoptimbenchmark/problems/steel+plates+faults {2}".format(config.evals, config.s, config.solver))
-    # os.system("python run_experiment.py --max-eval={0} --seed={1} rosenbrock --n-cont=10 {2}".format(config.evals, config.s, config.solver))
-    # os.system("python run_experiment.py --max-eval={0} --seed={1} rosen {2}".format(config.s, config.solver))
-    # os.system("python run_experiment.py --max-eval={0} --seed={1} convex -d=1000 {2}".format(config.evals, config.s, config.solver))
+# os.system("python run_experiment.py --max-eval={0} --seed={1} rosenbrock --n-cont=10 {2}".format(config.evals, config.s, config.solver))
+# os.system("python run_experiment.py --max-eval={0} --seed={1} rosen {2}".format(config.s, config.solver))
+# os.system("python run_experiment.py --max-eval={0} --seed={1} convex -d=1000 {2}".format(config.evals, config.s, config.solver))
 
 
 # if __name__ == "__main__":
 #     args = parse_args()
 #     pids = [int(pid) for pid in args.pids.split("-")]
-    # with Pool(5) as pool:
-    #     results = pool.map(run_problems, [(i, args) for i in range(5)])
+# with Pool(5) as pool:
+#     results = pool.map(run_problems, [(i, args) for i in range(5)])
 #      for pidx in pids:
 #         run_problems((pidx, args))
