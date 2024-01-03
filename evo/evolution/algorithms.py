@@ -80,6 +80,46 @@ class PopulationBasedSolver(StochasticSolver, ABC):
         return self.pop.get_best()
 
 
+class RandomSearch(PopulationBasedSolver):
+
+    def __init__(self, seed, num_params, pop_size, objectives_dict, range_min, range_max):
+        super().__init__(seed=seed,
+                         num_params=num_params,
+                         pop_size=pop_size,
+                         genotype_factory="uniform_float",
+                         objectives_dict=objectives_dict,
+                         remap=False,
+                         genetic_operators={},
+                         genotype_filter="none",
+                         comparator="lexicase",
+                         range=(range_min, range_max),
+                         n=num_params)
+        self.best_fitness = float("inf")
+        self.best_genotype = None
+
+    def ask(self):
+        if self.pop.gen == 0:
+            self.pop.clear()
+        for g in self.pop.init_random_individuals(n=self.pop_size):
+            self.pop.add_individual(g)
+        return [ind.genotype for ind in self.pop]
+
+    def tell(self, fitness_list):
+        for ind, f in zip([ind for ind in self.pop if not ind.evaluated], fitness_list):
+            ind.fitness = {"fitness": f}
+            ind.evaluated = True
+
+        import numpy as np
+        best_idx = np.argmin(fitness_list)
+        if self.best_fitness <= fitness_list[best_idx]:
+            self.best_fitness = fitness_list[best_idx]
+            self.best_genotype = self.pop[best_idx]
+        self.pop.clear()
+
+    def result(self):
+        return self.best_genotype, self.best_fitness
+
+
 class GeneticAlgorithm(PopulationBasedSolver):
 
     def __init__(self, seed, num_params, pop_size, genotype_factory, objectives_dict, survival_selector: str,

@@ -80,7 +80,7 @@ def run_problem(args):
                                             mu=0.0,
                                             sigma=0.1,
                                             n=config.n_params,
-                                            range=(0, 1))
+                                            range=(-5.0, 5.0))
     return parallel_solve(solver=solver, config=config, listener=listener)
 
 
