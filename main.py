@@ -29,32 +29,31 @@ def f(x):
 
 
 def parallel_solve(solver, config, listener):
-    best_result = None
     best_fitness = float("inf")
     start_time = time.time()
     evaluated = 0
     j = 0
     while evaluated < config.evals:
-        solutions = solver.ask()
-        before_time = time.time()
-        fitness_list = [eval(config.p + "({})".format(list(x))) for x in solutions]
-        after_time = time.time()
-        solver.tell(fitness_list)
+        # solutions = solver.ask()
+        # before_time = time.time()
+        # fitness_list = [eval(config.p + "({})".format(list(x))) for x in solutions]
+        # after_time = time.time()
+        # solver.tell(fitness_list)
+        solver.solve()
         result = solver.result()  # first element is the best solution, second element is the best fitness
+        evaluated = solver.get_num_evaluated()
         if (j + 1) % 10 == 0:
             logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
         listener.listen(**{"iteration": j,
                            "evaluations": evaluated,
                            "time.total": time.time() - start_time,
-                           "time.model": before_time - after_time,
-                           "time.eval": after_time - before_time,
+                           # "time.model": before_time - after_time,
+                           # "time.eval": after_time - before_time,
                            "best.fitness": result[1]})
-        if result[1] <= best_fitness or best_result is None:
-            best_result = result[0]
+        if result[1] <= best_fitness:
             best_fitness = result[1]
-        evaluated += len(solutions)
         j += 1
-    return best_result, best_fitness
+    return best_fitness
 
 
 def run_problem(args):
@@ -64,8 +63,8 @@ def run_problem(args):
     listener = FileListener(file_name=file_name, header=["iteration",
                                                          "evaluations",
                                                          "time.total",
-                                                         "time.model",
-                                                         "time.eval",
+                                                         # "time.model",
+                                                         # "time.eval",
                                                          "best.fitness"])
     solver = create_solver(s=s, config=config)
     return parallel_solve(solver=solver, config=config, listener=listener)

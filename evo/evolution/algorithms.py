@@ -3,8 +3,6 @@ import random
 from abc import ABC
 from typing import Dict
 
-import numpy as np
-
 from .objectives import ObjectiveDict
 from .operators.operator import GeneticOperator
 from .selection.filters import Filter
@@ -16,17 +14,15 @@ from ..utils.utilities import weighted_random_by_dct
 
 class StochasticSolver(abc.ABC):
 
-    def __init__(self, seed, num_params, pop_size):
+    def __init__(self, seed, num_params, pop_size, problem):
         self.seed = seed
         self.num_params = num_params
         self.pop_size = pop_size
+        self.problem = problem
+        self.it = 0
 
     @abc.abstractmethod
-    def ask(self):
-        pass
-
-    @abc.abstractmethod
-    def tell(self, fitness_list):
+    def solve(self):
         pass
 
     @abc.abstractmethod
@@ -40,10 +36,11 @@ class StochasticSolver(abc.ABC):
 
 class GPGO(StochasticSolver):
 
-    def __init__(self, seed, num_params, f, r, init_evals=3):
+    def __init__(self, seed, num_params, problem, r, init_evals=3):
         super().__init__(seed=seed,
                          num_params=num_params,
-                         pop_size=1)
+                         pop_size=1,
+                         problem=problem)
 
         from pyGPGO.covfunc import matern32
         from pyGPGO.acquisition import Acquisition
@@ -53,42 +50,14 @@ class GPGO(StochasticSolver):
         gp = GaussianProcess(cov)
         acq = Acquisition(mode="UCB")
         param = {"x{}".format(i): ("cont", list(r)) for i in range(num_params)}
-        self.gpgo = GPGO(gp, acq, f, param)
-        self.it = 0
-        self.init_evals = init_evals
+        self.gpgo = GPGO(gp, acq, lambda x: - self.problem(x), param)
         self.gpgo.init_evals = init_evals
 
-    def _firstRun(self):
-        self.gpgo.X = np.empty((self.init_evals, len(self.gpgo.parameter_key)))
-        self.gpgo.y = np.empty((self.init_evals,))
-        for i in range(self.init_evals):
-            s_param = self.gpgo._sampleParam()
-            s_param_val = list(s_param.values())
-            self.gpgo.X[i] = s_param_val
-
-    def _updateGP(self, f_new):
-        self.gpgo.GP.update(np.atleast_2d(self.gpgo.best), np.atleast_1d(f_new))
-        self.gpgo.tau = np.max(self.gpgo.GP.y)
-        self.gpgo.history.append(self.gpgo.tau)
-
-    def ask(self):
+    def solve(self):
         if self.it == 0:
-            self._firstRun()
-            return [self.gpgo.X[i] for i in range(self.init_evals)]
+            self.gpgo._firstRun(self.gpgo.init_evals)
         self.gpgo._optimizeAcq()
-        return [self.gpgo.best]
-
-    def tell(self, fitness_list):
-        if self.it == 0:
-            for i in range(self.init_evals):
-                self.gpgo.y[i] = - fitness_list[i]
-            self.gpgo.GP.fit(self.gpgo.X, self.gpgo.y)
-            self.gpgo.tau = np.max(self.gpgo.y)
-            self.gpgo.history.append(self.gpgo.tau)
-            self.it += 1
-            return
-        self.gpgo._optimizeAcq()
-        self._updateGP(f_new=-fitness_list[0])
+        self.gpgo.updateGP()
         self.it += 1
 
     def result(self):
@@ -96,7 +65,30 @@ class GPGO(StochasticSolver):
         return [v for v in best_genotype.values()], - best_fitness
 
     def get_num_evaluated(self):
-        return len(self.gpgo.history) + self.init_evals - 1
+        return len(self.gpgo.history) + self.gpgo.init_evals - 1
+
+
+class TPE(StochasticSolver):
+
+    def __init__(self, seed, num_params, problem, r):
+        super().__init__(seed, num_params, 1, problem)
+
+        from hyperopt import hp, tpe, fmin
+        from hyperopt import base
+        self.space = [hp.uniform("x{}".format(i), r[0], r[1]) for i in range(num_params)]
+        self.trials = base.Trials()
+        self.algo = tpe.suggest
+        self.fmin = fmin
+
+    def solve(self):
+        self.it += 1
+        self.fmin(self.problem, self.space, algo=self.algo, trials=self.trials, max_evals=self.it)
+
+    def result(self):
+        return [v for v in self.trials.best_trial["misc"]["vals"]], self.trials.best_trial["result"]["loss"]
+
+    def get_num_evaluated(self):
+        return len(self.trials.tids)
 
 
 class PopulationBasedSolver(StochasticSolver, ABC):
@@ -104,6 +96,7 @@ class PopulationBasedSolver(StochasticSolver, ABC):
     def __init__(self, seed: int,
                  num_params: int,
                  pop_size: int,
+                 problem,
                  genotype_factory: str,
                  objectives_dict: ObjectiveDict,
                  remap: bool,
@@ -111,7 +104,7 @@ class PopulationBasedSolver(StochasticSolver, ABC):
                  comparator: str,
                  genotype_filter: str = None,
                  **kwargs):
-        super().__init__(seed=seed, num_params=num_params, pop_size=pop_size)
+        super().__init__(seed=seed, num_params=num_params, pop_size=pop_size, problem=problem)
         self.pop_size = pop_size
         self.remap = remap
         self.pop = Population(pop_size=pop_size,
@@ -131,10 +124,11 @@ class PopulationBasedSolver(StochasticSolver, ABC):
 
 class RandomSearch(PopulationBasedSolver):
 
-    def __init__(self, seed, num_params, objectives_dict, r):
+    def __init__(self, seed, num_params, problem, objectives_dict, r):
         super().__init__(seed=seed,
                          num_params=num_params,
                          pop_size=1,
+                         problem=problem,
                          genotype_factory="uniform_float",
                          objectives_dict=objectives_dict,
                          remap=False,
@@ -146,22 +140,21 @@ class RandomSearch(PopulationBasedSolver):
         self.best_fitness = float("inf")
         self.best_genotype = None
 
-    def ask(self):
+    def solve(self):
         if self.pop.gen == 0:
             self.pop.clear()
         for g in self.pop.init_random_individuals(n=self.pop_size):
             self.pop.add_individual(g)
-        return [ind.genotype for ind in self.pop]
-
-    def tell(self, fitness_list):
-        for ind, f in zip([ind for ind in self.pop if not ind.evaluated], fitness_list):
-            ind.fitness = {"fitness": f}
-            ind.evaluated = True
-        best_idx = np.argmin(fitness_list)
-        if self.best_fitness <= fitness_list[best_idx]:
-            self.best_fitness = fitness_list[best_idx]
-            self.best_genotype = self.pop[best_idx]
+        for ind in self.pop:
+            if not ind.evaluated:
+                fitness = self.problem(ind.genotype)
+                ind.fitness = {"fitness": fitness}
+                ind.evaluated = True
+                if self.best_fitness >= fitness:
+                    self.best_fitness = fitness
+                    self.best_genotype = ind.genotype
         self.pop.clear()
+        self.it += 1
 
     def result(self):
         return self.best_genotype, self.best_fitness
@@ -169,12 +162,13 @@ class RandomSearch(PopulationBasedSolver):
 
 class GeneticAlgorithm(PopulationBasedSolver):
 
-    def __init__(self, seed, num_params, pop_size, genotype_factory, objectives_dict, survival_selector: str,
+    def __init__(self, seed, num_params, pop_size, problem, genotype_factory, objectives_dict, survival_selector: str,
                  parent_selector: str, offspring_size: int, overlapping: bool, remap, genetic_operators,
                  genotype_filter, **kwargs):
         super().__init__(seed=seed,
                          num_params=num_params,
                          pop_size=pop_size,
+                         problem=problem,
                          genotype_factory=genotype_factory,
                          objectives_dict=objectives_dict,
                          remap=remap,
@@ -201,17 +195,15 @@ class GeneticAlgorithm(PopulationBasedSolver):
         while len(self.pop) > self.pop_size:
             self.pop.remove_individual(self.survival_selector.select(population=self.pop, n=1)[0])
 
-    def ask(self):
+    def solve(self):
         if self.pop.gen != 0:
             for child_genotype in self._build_offspring():
                 self.pop.add_individual(genotype=child_genotype)
-        return [ind.genotype for ind in self.pop if not ind.evaluated]
-
-    def tell(self, fitness_list):
-        for ind, f in zip([ind for ind in self.pop if not ind.evaluated], fitness_list):
-            ind.fitness = {"fitness": f}
-            ind.evaluated = True
-            self.num_evaluated += 1
+        for ind in self.pop:
+            if not ind.evaluated:
+                ind.fitness = {"fitness": self.problem(ind.genotype)}
+                ind.evaluated = True
+                self.num_evaluated += 1
         if self.pop.gen != 0:
             self._trim_population()
         self.pop.gen += 1
@@ -273,23 +265,19 @@ class AFPO(GeneticAlgorithm):
 
 class CMAES(StochasticSolver):
 
-    def __init__(self, seed, num_params, pop_size, sigma_init):
-        super().__init__(seed, num_params, pop_size)
+    def __init__(self, seed, num_params, pop_size, problem, sigma_init):
+        super().__init__(seed, num_params, pop_size, problem)
         self.num_params = num_params
         self.sigma_init = sigma_init
-        self.solutions = None
         self.it = 0
 
         import cma
         self.es = cma.CMAEvolutionStrategy(self.num_params * [0], self.sigma_init, {"popsize": self.pop_size})
 
-    def ask(self):
-        self.solutions = self.es.ask()
+    def solve(self):
+        solutions = self.es.ask()
+        self.es.tell(solutions, [-self.problem(x) for x in solutions])
         self.it += 1
-        return self.solutions
-
-    def tell(self, fitness_list):
-        self.es.tell(self.solutions, [-f for f in fitness_list])
 
     def result(self):
         r = self.es.result
