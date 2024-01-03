@@ -1,14 +1,11 @@
 import argparse
 import logging
-import random
 import time
 from multiprocessing import Pool
 
 from cec2010.functions import *
-from evo.evolution.algorithms import StochasticSolver
-from evo.evolution.objectives import ObjectiveDict
 from evo.listeners.listener import FileListener
-from evo.utils.utilities import create_solver
+from utils import set_seed, create_solver
 
 
 def parse_args():
@@ -19,11 +16,6 @@ def parse_args():
     parser.add_argument("--n_params", type=int, default=10, help="solution size")
     parser.add_argument("--evals", type=int, default=15000, help="fitness evaluations")
     return parser.parse_args()
-
-
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
 
 
 def parallel_solve(solver, config, listener):
@@ -58,6 +50,7 @@ def parallel_solve(solver, config, listener):
 
 def run_problem(args):
     config, s = args
+    set_seed(s)
     file_name = ".".join([config.solver, config.p, str(s), "txt"])
     listener = FileListener(file_name=file_name, header=["iteration",
                                                          "evaluations",
