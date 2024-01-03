@@ -16,7 +16,7 @@ def create_solver(s, config, bounds=(-5, 5)):
     problem = eval(config.p)
     if config.solver == "rs":
         return RandomSearch(seed=s,
-                            num_params=config.num_params,
+                            num_params=config.n_params,
                             objectives_dict=objectives_dict,
                             problem=problem,
                             r=bounds)
@@ -38,7 +38,8 @@ def create_solver(s, config, bounds=(-5, 5)):
                                 mu=0.0,
                                 sigma=0.1,
                                 n=config.n_params,
-                                range=(-5.0, 5.0))
+                                lbs=[bounds[0] for _ in range(config.n_params)],
+                                ubs=[bounds[1] for _ in range(config.n_params)])
     elif config.solver == "gpgo":
         return GPGO(seed=s,
                     num_params=config.n_params,

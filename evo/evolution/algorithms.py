@@ -133,10 +133,11 @@ class RandomSearch(PopulationBasedSolver):
                          objectives_dict=objectives_dict,
                          remap=False,
                          genetic_operators={},
-                         genotype_filter="none",
+                         genotype_filter=None,
                          comparator="lexicase",
-                         range=r,
-                         n=num_params)
+                         n=num_params,
+                         lbs=[r[0] for _ in range(num_params)],
+                         ubs=[r[1] for _ in range(num_params)])
         self.best_fitness = float("inf")
         self.best_genotype = None
 
@@ -158,6 +159,9 @@ class RandomSearch(PopulationBasedSolver):
 
     def result(self):
         return self.best_genotype, self.best_fitness
+
+    def get_num_evaluated(self):
+        return self.it
 
 
 class GeneticAlgorithm(PopulationBasedSolver):
