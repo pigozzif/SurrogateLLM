@@ -3,8 +3,6 @@ import random
 from abc import ABC
 from typing import Dict
 
-import numpy as np
-
 from .objectives import ObjectiveDict
 from .operators.operator import GeneticOperator
 from .selection.filters import Filter
