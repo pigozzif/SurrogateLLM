@@ -19,15 +19,6 @@ def parse_args():
     return parser.parse_args()
 
 
-def f(x):
-    # Franke's function (https://www.mathworks.com/help/curvefit/franke.html)
-    one = 0.75 * np.exp(-(9 * x[0] - 2) ** 2 / 4 - (9 * x[1] - 2) ** 2 / 4)
-    two = 0.75 * np.exp(-(9 * x[0] + 1) ** 2 / 49 - (9 * x[1] + 1) / 10)
-    three = 0.5 * np.exp(-(9 * x[0] - 7) ** 2 / 4 - (9 * x[1] - 3) ** 2 / 4)
-    four = 0.25 * np.exp(-(9 * x[0] - 4) ** 2 - (9 * x[1] - 7) ** 2)
-    return one + two + three - four
-
-
 def parallel_solve(solver, config, listener):
     best_fitness = float("inf")
     start_time = time.time()

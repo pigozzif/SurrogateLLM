@@ -3,6 +3,8 @@ import random
 from abc import ABC
 from typing import Dict
 
+import numpy as np
+
 from .objectives import ObjectiveDict
 from .operators.operator import GeneticOperator
 from .selection.filters import Filter
@@ -48,14 +50,19 @@ class GPGO(StochasticSolver):
         from pyGPGO.GPGO import GPGO
         cov = matern32()
         gp = GaussianProcess(cov)
-        acq = Acquisition(mode="UCB")
+        acq = Acquisition(mode="ExpectedImprovement")
         param = {"x{}".format(i): ("cont", list(r)) for i in range(num_params)}
-        self.gpgo = GPGO(gp, acq, lambda x: - self.problem(x), param)
+        self.gpgo = GPGO(gp, acq, self.problem, param)
         self.gpgo.init_evals = init_evals
+
+    def _problem_wrapper(self, **kwargs):
+        return - self.problem([v for v in kwargs.values()])
 
     def solve(self):
         if self.it == 0:
             self.gpgo._firstRun(self.gpgo.init_evals)
+            self.it += 1
+            return
         self.gpgo._optimizeAcq()
         self.gpgo.updateGP()
         self.it += 1
@@ -66,6 +73,30 @@ class GPGO(StochasticSolver):
 
     def get_num_evaluated(self):
         return len(self.gpgo.history) + self.gpgo.init_evals - 1
+
+
+class BO(StochasticSolver):
+
+    def __init__(self, seed, num_params, problem, r, init_evals=3):
+        super().__init__(seed, num_params, 1, problem)
+
+        from bayes_opt import BayesianOptimization
+        p_bounds = {"x{}".format(i): r for i in range(num_params)}
+        self.bo = BayesianOptimization(f=self._problem_wrapper, pbounds=p_bounds, random_state=seed)
+        self.init_points = init_evals
+
+    def _problem_wrapper(self, **kwargs):
+        return - self.problem([v for v in kwargs.values()])
+
+    def solve(self):
+        self.bo.maximize(init_points=self.init_points if self.it == 0 else 0, n_iter=1)
+        self.it += 1
+
+    def result(self):
+        return [v for v in self.bo.max["params"].values()], - self.bo.max["target"]
+
+    def get_num_evaluated(self):
+        return len(self.bo.res)
 
 
 class TPE(StochasticSolver):

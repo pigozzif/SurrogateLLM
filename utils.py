@@ -1,7 +1,7 @@
 import random
 
 from cec2010.functions import *
-from evo.evolution.algorithms import GPGO, GeneticAlgorithm, RandomSearch, TPE
+from evo.evolution.algorithms import GPGO, GeneticAlgorithm, RandomSearch, TPE, BO
 from evo.evolution.objectives import ObjectiveDict
 
 
@@ -45,6 +45,11 @@ def create_solver(s, config, bounds=(-5, 5)):
                     num_params=config.n_params,
                     problem=problem,
                     r=bounds)
+    elif config.solver == "bo":
+        return BO(seed=s,
+                  num_params=config.n_params,
+                  problem=problem,
+                  r=bounds)
     elif config.solver == "tpe":
         return TPE(seed=s,
                    num_params=config.n_params,

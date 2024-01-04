@@ -20,7 +20,7 @@ def rastrigin(x):
 
 def ackley(x):
     d = len(x)
-    return -20.0 * np.exp(-0.2 * np.sqrt(f1(x) / d)) + np.exp(np.sum(inner_cos(x)) / d) + 20.0 + np.e
+    return -20.0 * np.exp(-0.2 * np.sqrt(sphere(x) / d)) + np.exp(np.sum(inner_cos(x)) / d) + 20.0 + np.e
 
 
 def schwefel(x):
