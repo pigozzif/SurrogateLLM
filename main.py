@@ -28,8 +28,6 @@ def parallel_solve(solver, config, listener):
         solver.solve()
         result = solver.result()  # first element is the best solution, second element is the best fitness
         evaluated = solver.get_num_evaluated()
-        if (j + 1) % 10 == 0:
-            logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
         listener.listen(**{"iteration": j,
                            "evaluations": evaluated,
                            "time.total": time.time() - start_time,
