@@ -7,7 +7,7 @@ def sphere(x):
 
 def elliptic(x):
     d = len(x)
-    return np.sum(np.pow(10.0, 6.0 * (np.arange(d) - 1.0) / (d - 1.0)) * np.square(x))
+    return np.sum(np.power(10.0, 6.0 * (np.arange(d) - 1.0) / (d - 1.0)) * np.square(x))
 
 
 def inner_cos(x):

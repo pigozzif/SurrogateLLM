@@ -1,5 +1,4 @@
 import argparse
-import logging
 import time
 from multiprocessing import Pool
 import os
